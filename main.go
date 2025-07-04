@@ -86,17 +86,17 @@ func processCSV(records [][]string, model *word2vec.Model) ([]string, []float32,
 }
 
 type Post struct {
-	Num     int     `json:"num,omitempty"`
-	Score   float32 `json:"score,omitempty"`
-	Solvers int     `json:"solvers,omitempty"`
-	Error   string  `json:"error,omitempty"`
+	P     int     `json:"p,omitempty"` // only returns 1000 when solved
+	S     float32 `json:"s,omitempty"` // score
+	V     int     `json:"v,omitempty"` // appears to be the number of solvers
+	Error string  `json:"error,omitempty"`
 }
 
 func getScore(word string) (float32, error) {
 	// curl 'https://cemantix.certitudes.org/score' -X POST -H 'Content-Type: application/x-www-form-urlencoded' -H 'Origin: https://cemantix.certitudes.org' --data-raw 'word=est' -i
 	data := fmt.Sprintf(`word=%s`, word)
 	body := []byte(data)
-	url := fmt.Sprintf("%s/score", CEMANTIX_URL)
+	url := fmt.Sprintf("%s/score?n=1220", CEMANTIX_URL) // not sure what the n=1220 means but it was the only working value
 	r, err := http.NewRequest("POST", url, bytes.NewBuffer(body))
 	if err != nil {
 		return 0, err
@@ -120,7 +120,7 @@ func getScore(word string) (float32, error) {
 	if post.Error != "" {
 		return 0, fmt.Errorf("error: %s", post.Error)
 	}
-	return post.Score, nil
+	return post.S, nil
 }
 
 func convertTo64(ar []float32) []float64 {
